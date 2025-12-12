@@ -1,9 +1,10 @@
-# stream-lit_app.py — FINAL UI FOR NIVA
+# stream-lit_app.py — FINAL UI FOR NIVA (updated import)
 import streamlit as st
 import os
 import time
 from dotenv import load_dotenv
 
+# Import from the pipeline file we just added
 from langchain_pipeline import (
     generate_conversational_reply,
     extract_structured_from_conversation,
@@ -13,6 +14,7 @@ from langchain_pipeline import (
     assign_doctor,
 )
 
+# load local .env if present (safe)
 load_dotenv()
 
 st.set_page_config(page_title="NIVA Medical Assistant", page_icon="💠", layout="wide")
@@ -70,7 +72,7 @@ with left:
         st.session_state.structured = None
         st.session_state.pdf_path = None
         st.session_state.typing = False
-        st.rerun()
+        st.experimental_rerun()
 
     st.caption("NIVA Healthcare Assistant © 2025")
 
@@ -108,22 +110,23 @@ with right:
 
     # ---------------- PROCESS SEND ----------------
     if submitted:
-        if user_input.strip():
+        if user_input and user_input.strip():
             st.session_state.messages.append(("patient", user_input.strip()))
             st.session_state.typing = True
-            st.rerun()
+            st.experimental_rerun()
 
     if st.session_state.typing:
         last = st.session_state.messages[-1][1]
+        # call the pipeline
         bot_msg = generate_conversational_reply(st.session_state.messages, last, k_context=kctx, temperature=temp)
         st.session_state.typing = False
         st.session_state.messages.append(("bot", bot_msg))
-        st.rerun()
+        st.experimental_rerun()
 
     # ---------------- FINISH = GENERATE REPORT ----------------
     if finish and not st.session_state.finished:
         st.session_state.finished = True
-        st.rerun()
+        st.experimental_rerun()
 
     # AFTER FINISHED → generate report ONCE
     if st.session_state.finished and st.session_state.structured is None:
@@ -146,8 +149,11 @@ with right:
         st.success("Report generated! Download below.")
 
     if st.session_state.pdf_path:
-        with open(st.session_state.pdf_path, "rb") as f:
-            st.download_button("⬇ Download PDF",
-                               f,
-                               file_name=os.path.basename(st.session_state.pdf_path),
-                               mime="application/pdf")
+        try:
+            with open(st.session_state.pdf_path, "rb") as f:
+                st.download_button("⬇ Download PDF",
+                                   f,
+                                   file_name=os.path.basename(st.session_state.pdf_path),
+                                   mime="application/pdf")
+        except FileNotFoundError:
+            st.error("PDF not found (file was removed).")
