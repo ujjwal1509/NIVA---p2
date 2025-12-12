@@ -1,0 +1,51 @@
+doctor_id,doctor_name,specialty,city,hospital,experience_years,contact_url
+1,Dr. Asha Reddy,General Physician,Bangalore,Apollo Clinic,12,https://example.com/asha
+2,Dr. Manish Kulkarni,Cardiology,Pune,Ruby Hall Clinic,18,https://example.com/manish
+3,Dr. Reema Shah,Dermatology,Mumbai,Kokilaben Hospital,9,https://example.com/reema
+4,Dr. J. Ravi Kumar,ENT,Hyderabad,Yashoda Hospitals,14,https://example.com/ravi
+5,Dr. Sneha Mehta,Pediatrics,Ahmedabad,Shalby Hospital,7,https://example.com/sneha
+6,Dr. Rajesh Varma,Neurology,Chennai,SRM Medical Centre,20,https://example.com/rajesh
+7,Dr. Priya Menon,Gynecology,Cochin,Amrita Institute,15,https://example.com/priya
+8,Dr. Vikram Chauhan,Gastroenterology,Delhi,Fortis Escorts,13,https://example.com/vikram
+9,Dr. Anil Patil,Orthopedics,Hubli,KIMS,8,https://example.com/anil
+10,Dr. Gayatri Nair,Psychiatry,Mumbai,Nair Hospital,11,https://example.com/gayatri
+11,Dr. Kiran Babu,General Physician,Hyderabad,Care Hospitals,5,https://example.com/kiran
+12,Dr. Sheetal Kothari,Dermatology,Indore,Mahaveer Skin Centre,4,https://example.com/sheetal
+13,Dr. Upendra Singh,Urology,Jaipur,Metro Hospital,16,https://example.com/upendra
+14,Dr. Lakshmi Iyer,Ophthalmology,Chennai,Sankara Nethralaya,19,https://example.com/lakshmi
+15,Dr. Nishant Sharma,General Physician,Bhopal,AIIMS Bhopal,10,https://example.com/nishant
+16,Dr. Preeti Desai,Cardiology,Pune,Sahyadri Hospital,22,https://example.com/preeti
+17,Dr. Feroz Ali,ENT,Mangalore,Yenepoya Hospital,6,https://example.com/feroz
+18,Dr. Jaya Krishnan,Pediatrics,Delhi,BLK Super Specialty,12,https://example.com/jaya
+19,Dr. Rajkumar Sethi,Neurology,Kolkata,AMRI Hospital,24,https://example.com/rajkumar
+20,Dr. Kavitha Murthy,Gynecology,Chennai,Apollo Women's Hospital,18,https://example.com/kavitha
+21,Dr. Deepak Rao,Gastroenterology,Bangalore,Columbia Asia,14,https://example.com/deepak
+22,Dr. Dolly Shah,Orthopedics,Ahmedabad,Shree Hospital,9,https://example.com/dolly
+23,Dr. Varun Sharma,Psychiatry,Noida,Max Healthcare,11,https://example.com/varun
+24,Dr. Sunitha Pillai,General Physician,Trivandrum,SUT Hospital,5,https://example.com/sunitha
+25,Dr. Naveen Gowda,Dermatology,Bangalore,Manipal Hospital,8,https://example.com/naveen
+26,Dr. Ritika Jain,Urology,Surat,Sunshine Hospital,4,https://example.com/ritika
+27,Dr. Mahesh Bhat,Ophthalmology,Mysore,Narayana Nethralaya,21,https://example.com/mahesh
+28,Dr. Vandana Kapoor,General Physician,Delhi,Batra Hospital,9,https://example.com/vandana
+29,Dr. Pradeep Joshi,Cardiology,Indore,CHL Hospitals,13,https://example.com/pradeep
+30,Dr. Sonal Gupta,ENT,Jaipur,Narayana Hospital,7,https://example.com/sonal
+31,Dr. Akshay Rao,Pediatrics,Pune,KEM Hospital,6,https://example.com/akshay
+32,Dr. Hemant Mishra,Neurology,Varanasi,Sir Sunderlal Hospital,17,https://example.com/hemant
+33,Dr. Keerthi Shetty,Gynecology,Mangalore,AJ Hospital,10,https://example.com/keerthi
+34,Dr. Saumya Patel,Gastroenterology,Vadodara,Global Hospital,8,https://example.com/saumya
+35,Dr. Manohar Singh,Orthopedics,Ranchi,RIMS,12,https://example.com/manohar
+36,Dr. Priyanka Nair,Psychiatry,Chennai,Dr. Agarwal Centre,9,https://example.com/priyanka
+37,Dr. Dhananjay Kulkarni,Pediatrics,Gurgaon,Medanta,11,https://example.com/dhananjay
+38,Dr. Ashwini Rao,General Physician,Vijayawada,Manipal Hospital,7,https://example.com/ashwini
+39,Dr. Suresh Verma,Dermatology,Bhopal,SkinCare Clinic,16,https://example.com/suresh
+40,Dr. Raghav Singh,Cardiology,Lucknow,KGMC,14,https://example.com/raghav
+41,Dr. Ritu Chawla,ENT,Bhopal,City ENT Centre,5,https://example.com/ritu
+42,Dr. Ajay Pandey,Neurology,Delhi,ILBS,23,https://example.com/ajay
+43,Dr. Shilpa Das,Gynecology,Kolkata,Woodlands Hospital,18,https://example.com/shilpa
+44,Dr. Nikhil Jain,Gastroenterology,Indore,Artemis Hospital,9,https://example.com/nikhil
+45,Dr. Sneha Varma,Orthopedics,Chennai,Orthocare Clinic,4,https://example.com/sneha2
+46,Dr. Arvind Menon,Psychiatry,Bangalore,NIMHANS,15,https://example.com/arvind
+47,Dr. Rashmi Sirohi,General Physician,Jaipur,City Clinic,6,https://example.com/rashmi
+48,Dr. Rohit Sen,Dermatology,Kolkata,DermaPoint,8,https://example.com/rohit
+49,Dr. Anusha Pillai,ENT,Chennai,Sri Balaji Hospital,10,https://example.com/anusha
+50,Dr. Karthik Rao,Pediatrics,Bangalore,Cloudnine Hospital,7,https://example.com/karthik
