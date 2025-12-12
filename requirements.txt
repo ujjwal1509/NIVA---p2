@@ -1,0 +1,9 @@
+streamlit
+requests
+sentence-transformers
+pinecone-client
+langchain
+langchain-community
+langchain-huggingface
+python-dotenv
+fpdf2
