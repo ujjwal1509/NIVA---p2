@@ -1,4 +1,4 @@
-streamlit
+streamlit>=1.20
 requests
 sentence-transformers
 pinecone-client
@@ -7,3 +7,5 @@ langchain-community
 langchain-huggingface
 python-dotenv
 fpdf2
+pandas
+numpy
