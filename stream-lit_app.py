@@ -1,10 +1,9 @@
-# stream-lit_app.py — FINAL UI FOR NIVA (safe rerun wrapper)
+# stream-lit_app.py — FINAL UI FOR NIVA (original style)
 import streamlit as st
 import os
 import time
 from dotenv import load_dotenv
 
-# Import from the pipeline file
 from langchain_pipeline import (
     generate_conversational_reply,
     extract_structured_from_conversation,
@@ -14,32 +13,17 @@ from langchain_pipeline import (
     assign_doctor,
 )
 
-# load local .env if present (safe)
 load_dotenv()
 
 st.set_page_config(page_title="NIVA Medical Assistant", page_icon="💠", layout="wide")
 
-# ---------------- safe rerun helper ----------------
-def safe_rerun():
-    """
-    Use st.experimental_rerun() when available; otherwise fall back to st.stop().
-    This avoids AttributeError across Streamlit versions.
-    """
-    try:
-        # Preferred method (may not exist in some runtimes)
-        st.experimental_rerun()
-    except Exception:
-        try:
-            # Gracefully stop execution; Streamlit will rerun on next interaction
-            st.stop()
-        except Exception:
-            # Last-resort: no-op
-            return
-
 # ---------------- SESSION INIT ----------------
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        ("bot", "Hello, I am NIVA, your medical intake assistant. How can I help you today?")
+        (
+            "bot",
+            "Hello, I am NIVA, your medical intake assistant. How can I help you today?",
+        )
     ]
 if "finished" not in st.session_state:
     st.session_state.finished = False
@@ -67,7 +51,9 @@ footer {visibility:hidden;}
     unsafe_allow_html=True,
 )
 
-st.markdown("<div class='top'>💠 NIVA — Medical Intake Assistant</div>", unsafe_allow_html=True)
+st.markdown(
+    "<div class='top'>💠 NIVA — Medical Intake Assistant</div>", unsafe_allow_html=True
+)
 
 # ---------------- SIDEBAR ----------------
 left, right = st.columns([1.3, 5])
@@ -86,29 +72,34 @@ with left:
     st.markdown("### Reset Conversation")
     if st.button("Start New Conversation"):
         st.session_state.messages = [
-            ("bot", "Hello, I am NIVA, your medical intake assistant. How can I help you today?")
+            (
+                "bot",
+                "Hello, I am NIVA, your medical intake assistant. How can I help you today?",
+            )
         ]
         st.session_state.finished = False
         st.session_state.structured = None
         st.session_state.pdf_path = None
         st.session_state.typing = False
-        safe_rerun()
+        st.rerun()
 
     st.caption("NIVA Healthcare Assistant © 2025")
 
 # ---------------- MAIN CHAT ----------------
 with right:
-
     # chat display
     for role, text in st.session_state.messages:
         cls = "user" if role == "patient" else "bot"
         who = "You" if role == "patient" else "NIVA"
         st.markdown(
-            f"<div class='bubble {cls}'><b>{who}:</b><br>{text}</div>", unsafe_allow_html=True
+            f"<div class='bubble {cls}'><b>{who}:</b><br>{text}</div>",
+            unsafe_allow_html=True,
         )
 
     if st.session_state.typing:
-        st.markdown("<div class='bubble bot'>NIVA is typing…</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div class='bubble bot'>NIVA is typing…</div>", unsafe_allow_html=True
+        )
 
     # ---------------- INPUT ----------------
     st.markdown("### Your Message")
@@ -127,35 +118,37 @@ with right:
     else:
         submitted = False
         finish = False
-        st.text_input("", value="Conversation finished. Start a new one.", disabled=True)
+        st.text_input(
+            "", value="Conversation finished. Start a new one.", disabled=True
+        )
         st.session_state.finished = True
 
     # ---------------- PROCESS SEND ----------------
     if submitted:
-        if user_input and user_input.strip():
+        if user_input.strip():
             st.session_state.messages.append(("patient", user_input.strip()))
             st.session_state.typing = True
-            safe_rerun()
+            st.rerun()
 
     if st.session_state.typing:
         last = st.session_state.messages[-1][1]
-        # call the pipeline
         bot_msg = generate_conversational_reply(
             st.session_state.messages, last, k_context=kctx, temperature=temp
         )
         st.session_state.typing = False
         st.session_state.messages.append(("bot", bot_msg))
-        safe_rerun()
+        st.rerun()
 
     # ---------------- FINISH = GENERATE REPORT ----------------
     if finish and not st.session_state.finished:
         st.session_state.finished = True
-        safe_rerun()
+        st.rerun()
 
     # AFTER FINISHED → generate report ONCE
     if st.session_state.finished and st.session_state.structured is None:
         conv_text = "\n".join(
-            f"{'Patient' if r=='patient' else 'NIVA'}: {t}" for r, t in st.session_state.messages
+            f"{'Patient' if r == 'patient' else 'NIVA'}: {t}"
+            for r, t in st.session_state.messages
         )
         st.session_state.structured = extract_structured_from_conversation(conv_text)
         tri = triage_report(st.session_state.structured)
@@ -175,13 +168,10 @@ with right:
         st.success("Report generated! Download below.")
 
     if st.session_state.pdf_path:
-        try:
-            with open(st.session_state.pdf_path, "rb") as f:
-                st.download_button(
-                    "⬇ Download PDF",
-                    f,
-                    file_name=os.path.basename(st.session_state.pdf_path),
-                    mime="application/pdf",
-                )
-        except FileNotFoundError:
-            st.error("PDF not found (file was removed).")
+        with open(st.session_state.pdf_path, "rb") as f:
+            st.download_button(
+                "⬇ Download PDF",
+                f,
+                file_name=os.path.basename(st.session_state.pdf_path),
+                mime="application/pdf",
+            )

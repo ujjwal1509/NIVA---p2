@@ -1,0 +1,74 @@
+{
+  "conversation": [
+    [
+      "bot",
+      "Hello, I am NIVA, your medical intake assistant. How can I help you today?"
+    ],
+    [
+      "patient",
+      "cough"
+    ],
+    [
+      "bot",
+      "How long have you had this issue?"
+    ],
+    [
+      "patient",
+      "from past 2 days"
+    ],
+    [
+      "bot",
+      "How severe is it — mild, moderate, or severe?"
+    ],
+    [
+      "patient",
+      "mild"
+    ],
+    [
+      "bot",
+      "Do you have any additional symptoms?"
+    ],
+    [
+      "patient",
+      "i have soarness in my throat"
+    ],
+    [
+      "bot",
+      "Do you have any medical history?"
+    ],
+    [
+      "patient",
+      "no"
+    ],
+    [
+      "bot",
+      "Thank you. I have collected all the required information."
+    ]
+  ],
+  "structured": {
+    "symptoms": "cough",
+    "duration": "from past 2 days",
+    "severity": "mild",
+    "additional_symptoms": "i have soarness in my throat",
+    "medical_history": "no",
+    "provisional_urgency": "low"
+  },
+  "triage": {
+    "severity": "mild",
+    "urgency": "non-urgent",
+    "probable_cause": "Unknown (fallback)",
+    "recommended_department": "General Medicine",
+    "triage_score": 2,
+    "notes": "Fallback used",
+    "priority": "LOW",
+    "specialist": "General Physician"
+  },
+  "doctor": {
+    "doctor_name": "Dr. Rashmi Sirohi",
+    "specialty": "General Physician",
+    "city": "Jaipur",
+    "hospital": "City Clinic",
+    "experience_years": 6,
+    "contact_url": "https://example.com/rashmi"
+  }
+}
