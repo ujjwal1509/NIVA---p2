@@ -1,7 +1,5 @@
+# langchain_pipeline.py — GROQ (llama3-70b) integration version
 # ============================================================
-# langchain_pipeline.py — FINAL FIXED VERSION
-# ============================================================
-
 import os
 import re
 import json
@@ -14,7 +12,7 @@ from dotenv import load_dotenv
 try:
     import pandas as pd
     import numpy as np
-except:
+except Exception:
     pd = None
     np = None
 
@@ -22,33 +20,57 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-# ------------------------------------------------------------
-# OLLAMA CONFIG
-# ------------------------------------------------------------
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
-MODEL_NAME = os.getenv("MODEL_NAME", "llama3")
+# ---------------- GROQ CONFIG ----------------
+# Set GROQ_API_KEY in environment or Streamlit Secrets (recommended).
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", None)
+# Recommended model for best quality:
+GROQ_MODEL = os.getenv("GROQ_MODEL", "groq/llama3-70b")
+GROQ_URL = os.getenv("GROQ_URL", "https://api.groq.com/openai/v1/chat/completions")
+# Fallback timeout
+GROQ_TIMEOUT = int(os.getenv("GROQ_TIMEOUT", "60"))
 
+def call_groq(prompt, max_tokens=150, temperature=0.35, timeout=GROQ_TIMEOUT):
+    """
+    Calls Groq's OpenAI-compatible chat completions endpoint.
+    Returns raw text (string) or empty string on failure.
+    """
+    if not GROQ_API_KEY:
+        logger.warning("GROQ_API_KEY not set — skipping LLM call.")
+        return ""
 
-def call_ollama(prompt, max_tokens=150, temperature=0.35, timeout=60):
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    # Use the standard chat/completions payload (OpenAI-compatible)
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "n": 1,
+        "stream": False,
+    }
+
     try:
-        url = OLLAMA_URL.rstrip("/") + "/api/generate"
-        payload = {
-            "model": MODEL_NAME,
-            "prompt": prompt,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "stream": False,
-        }
-        resp = requests.post(url, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        data = resp.json()
+        r = requests.post(GROQ_URL, headers=headers, json=payload, timeout=timeout)
+        r.raise_for_status()
+        data = r.json()
 
-        if isinstance(data, dict) and "response" in data:
-            return data["response"].strip()
-
+        # Parse OpenAI/Groq-style response:
+        # data["choices"][0]["message"]["content"]
+        if isinstance(data, dict):
+            choices = data.get("choices") or []
+            if choices:
+                msg = choices[0].get("message", {}) .get("content") or choices[0].get("text")
+                if msg:
+                    return str(msg).strip()
         return str(data).strip()
     except Exception as e:
-        logger.warning("Ollama failed: %s", e)
+        logger.warning("Groq call failed: %s", e)
         return ""
 
 
@@ -56,7 +78,6 @@ def call_ollama(prompt, max_tokens=150, temperature=0.35, timeout=60):
 # DATASET LOADING
 # ------------------------------------------------------------
 CSV_PATH = "data/niva_dataset1.csv"
-
 SYMPTOM_DF = None
 SYMPTOM_COLS = []
 DATASET_LOADED = False
@@ -70,18 +91,15 @@ if pd is not None and os.path.exists(CSV_PATH):
             SYMPTOM_COLS = list(df.columns[:-1])
         SYMPTOM_DF = df
         DATASET_LOADED = True
-    except:
+    except Exception:
         DATASET_LOADED = False
-
 
 def _normalize_sym(s):
     return re.sub(r"\s+", " ", s.replace("_", " ").lower()).strip()
 
-
 NORMALIZED_MAP = {}
 if DATASET_LOADED:
     NORMALIZED_MAP = {col: _normalize_sym(col) for col in SYMPTOM_COLS}
-
 
 def extract_symptom_keywords(text):
     if not DATASET_LOADED or not text:
@@ -89,36 +107,31 @@ def extract_symptom_keywords(text):
     t = text.lower()
     return {col for col, phrase in NORMALIZED_MAP.items() if phrase in t}
 
-
 def suggest_next_symptom(known):
     if not DATASET_LOADED:
         return None
-
-    df = SYMPTOM_DF
+    df = SYMPTOM_DF.copy()
     mask = None
-
     for s in known:
         if s in df.columns:
             cond = df[s] == 1
             mask = cond if mask is None else (mask & cond)
-
     if mask is not None:
         sub = df[mask]
         if not sub.empty:
             df = sub
-
     freqs = df[SYMPTOM_COLS].mean(numeric_only=True)
-
     for s in known:
         if s in freqs:
             freqs[s] = 0
-
+    if freqs.empty:
+        return None
     next_col = freqs.idxmax()
     return next_col if freqs[next_col] > 0 else None
 
 
 # ------------------------------------------------------------
-# HYBRID QUESTION GENERATOR
+# HYBRID QUESTION GENERATOR (uses Groq)
 # ------------------------------------------------------------
 def generate_conversational_reply(messages, user_message, k_context=3, temperature=0.35):
     required = ["symptoms", "duration", "severity", "additional symptoms", "medical history"]
@@ -171,7 +184,7 @@ Patient last said: "{user_message}"
 Now ask ONE question.
 """
 
-    reply = call_ollama(prompt, max_tokens=120, temperature=temperature).strip()
+    reply = call_groq(prompt, max_tokens=120, temperature=temperature).strip()
 
     if not reply:
         fallback = {
@@ -198,7 +211,6 @@ def extract_structured_from_conversation(conv_text):
         for line in conv_text.split("\n")
         if line.startswith("Patient:")
     ]
-
     while len(answers) < 5:
         answers.append("")
 
@@ -237,7 +249,7 @@ def parse_duration(text):
 
 
 # ------------------------------------------------------------
-# TRIAGE PROMPT (FIXED - BRACES ESCAPED)
+# TRIAGE PROMPT (use same prompt as before)
 # ------------------------------------------------------------
 TRIAGE_PROMPT = """
 You are a medical triage classifier.
@@ -257,14 +269,13 @@ Format:
 }}
 """
 
-
 def safe_json_load(text):
     try:
         m = re.search(r"(\{.*\})", text, flags=re.DOTALL)
         if not m:
             return None
         return json.loads(m.group(1))
-    except:
+    except Exception:
         return None
 
 
@@ -279,7 +290,7 @@ def classify_triage(structured):
     }
 
     prompt = TRIAGE_PROMPT.format(data=json.dumps(input_obj))
-    raw = call_ollama(prompt, max_tokens=200, temperature=0.2)
+    raw = call_groq(prompt, max_tokens=300, temperature=0.2)
     parsed = safe_json_load(raw)
 
     if parsed:
@@ -313,7 +324,7 @@ def classify_triage(structured):
 
 def triage_report(structured):
     t = classify_triage(structured)
-    dept = t["recommended_department"].lower()
+    dept = t.get("recommended_department","").lower()
 
     specialist = "General Physician"
     if "emergency" in dept: specialist = "Emergency Care"
@@ -331,8 +342,12 @@ def triage_report(structured):
 # DOCTOR ASSIGNMENT
 # ------------------------------------------------------------
 DOCTORS_PATH = "data/doctors.csv"
-DOCTORS = pd.read_csv(DOCTORS_PATH) if (pd is not None and os.path.exists(DOCTORS_PATH)) else None
-
+DOCTORS = None
+if pd is not None and os.path.exists(DOCTORS_PATH):
+    try:
+        DOCTORS = pd.read_csv(DOCTORS_PATH)
+    except Exception:
+        DOCTORS = None
 
 def safe_val(v):
     if np is not None:
@@ -341,7 +356,6 @@ def safe_val(v):
         if isinstance(v, np.floating):
             return float(v)
     return v if v is not None else ""
-
 
 def assign_doctor(triage):
     if DOCTORS is None:
@@ -354,13 +368,16 @@ def assign_doctor(triage):
             "contact_url": "",
         }
 
-    spec = triage["specialist"].lower()
-    df = DOCTORS[DOCTORS["specialty"].str.lower() == spec]
+    spec = triage.get("specialist","").lower()
+    df = DOCTORS[DOCTORS["specialty"].str.lower() == spec] if "specialty" in DOCTORS.columns else DOCTORS
 
     if df.empty:
         df = DOCTORS
 
-    row = df.sample(1).iloc[0]
+    try:
+        row = df.sample(1).iloc[0]
+    except Exception:
+        row = df.iloc[0]
 
     return {
         "doctor_name": safe_val(row.get("doctor_name")),
@@ -391,43 +408,30 @@ def save_report(out, path="outputs/report.json"):
         return o
 
     safe_out = convert(out)
-
     os.makedirs("outputs", exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(safe_out, f, indent=2, ensure_ascii=False)
-
     return path
 
 
 # ------------------------------------------------------------
-# FINAL — SAFE PDF GENERATOR
+# PDF GENERATOR (unchanged from your version)
 # ------------------------------------------------------------
 from fpdf import FPDF
 
 def save_report_pdf(out, path=None):
-    """PDF generator with Unicode sanitization and width-safe formatting."""
-
     def clean(t):
         if not isinstance(t, str):
             t = str(t)
-
-        # Remove emojis / unicode that FPDF cannot render
         t = t.encode("latin-1", "ignore").decode("latin-1")
-
-        # Remove remaining non-printable ASCII
         t = re.sub(r"[^\x20-\x7E]", "", t)
-
-        # Normalize whitespace
         t = t.replace("\n", " ").replace("\t", " ")
         t = re.sub(r"\s+", " ", t)
-
         return t.strip() or "-"
 
     ts = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
     if path is None:
         path = f"outputs/niva_report_{ts}.pdf"
-
     os.makedirs("outputs", exist_ok=True)
 
     class PDF(FPDF):
@@ -438,7 +442,6 @@ def save_report_pdf(out, path=None):
             self.set_font("Arial","B",18)
             self.cell(0,12,"NIVA Medical Consultation Report",ln=True,align="C")
             self.ln(8)
-
         def footer(self):
             self.set_y(-15)
             self.set_font("Arial","I",8)
@@ -449,10 +452,10 @@ def save_report_pdf(out, path=None):
     pdf.set_auto_page_break(True,15)
     pdf.add_page()
 
-    structured = out["structured"]
-    triage = out["triage"]
-    doctor = out["doctor"]
-    conv = out["conversation"]
+    structured = out.get("structured",{})
+    triage = out.get("triage",{})
+    doctor = out.get("doctor",{})
+    conv = out.get("conversation",[])
 
     def section(title):
         pdf.set_fill_color(230,245,255)
@@ -462,7 +465,6 @@ def save_report_pdf(out, path=None):
         pdf.ln(2)
         pdf.set_font("Arial","",12)
 
-    # Structured
     section("Structured Information")
     for label, key in [
         ("Symptoms","symptoms"),
@@ -475,19 +477,16 @@ def save_report_pdf(out, path=None):
         pdf.multi_cell(0,8,f"{label}: {clean(structured.get(key,''))}")
         pdf.ln(1)
 
-    # Triage
     section("Triage Recommendation")
     for key in ["severity","urgency","triage_score","priority","probable_cause","recommended_department","notes"]:
         pdf.multi_cell(0,8,f"{key.title()}: {clean(str(triage.get(key,'')))}")
         pdf.ln(1)
 
-    # Doctor
     section("Assigned Doctor")
     for k,v in doctor.items():
         pdf.multi_cell(0,8,f"{k.replace('_',' ').title()}: {clean(str(v))}")
         pdf.ln(1)
 
-    # Conversation
     section("Conversation Transcript")
     for role,text in conv:
         who = "Patient" if role=="patient" else "NIVA"
@@ -497,6 +496,5 @@ def save_report_pdf(out, path=None):
     pdf.ln(4)
     pdf.set_font("Arial","I",11)
     pdf.cell(0,8,f"Report ID: RPT-{ts}",ln=True)
-
     pdf.output(path)
     return path
